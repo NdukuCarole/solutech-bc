@@ -57,7 +57,7 @@ class BookController extends Controller
         $book = Book::find($loan->book_id);
         $book->increment('quantity');
 
-        return response()->json(['message' => 'Book returned successfully.'], 200);
+        return response()->json(['status_code' => 1000,'message' => 'Book returned successfully.'], 200);
     }
 
     public function viewLoans()
@@ -173,7 +173,7 @@ class BookController extends Controller
         $extendedDueDate = $currentDate->addDays($extensionDays);
         $loan->update(['due_date' => $extendedDueDate]);
 
-        return response()->json(['message' => 'Loan extended successfully.'], 200);
+        return response()->json(['status_code' => 1000,'message' => 'Loan extended successfully.'], 200);
     }
 
     public function receiveBook(Request $request)

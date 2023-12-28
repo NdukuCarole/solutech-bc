@@ -29,6 +29,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/view-loans', [App\Http\Controllers\BookController::class, 'viewLoans']);
     Route::post('/approve-loan', [App\Http\Controllers\BookController::class, 'approveLoan']);
     Route::post('/decline-loan', [App\Http\Controllers\BookController::class, 'declineLoan']);
+    Route::post('/return-book', [App\Http\Controllers\BookController::class, 'returnBook']);
+    Route::post('/extend-loan', [App\Http\Controllers\BookController::class, 'extendLoan']);
+    Route::post('/receive-book', [App\Http\Controllers\BookController::class, 'receiveBook']);
     // Add more protected routes here
 });
 
@@ -36,8 +39,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
 
-Route::post('/return-book', [App\Http\Controllers\BookController::class, 'returnBook']);
 
 
-Route::post('/extend-loan', [App\Http\Controllers\BookController::class, 'extendLoan']);
-Route::post('/receive-book', [App\Http\Controllers\BookController::class, 'receiveBook']);
+
+
+
