@@ -22,6 +22,7 @@ Route::post('/login', [App\Http\Controllers\AuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/users', [App\Http\Controllers\UserController::class, 'getAllUsers']);
+    Route::put('/users/{id}', [App\Http\Controllers\UserController::class, 'updateUser']);
     Route::post('/register-user', [App\Http\Controllers\AuthController::class, 'register']);
     Route::post('/add-book', [App\Http\Controllers\BookController::class, 'addBook']);
     Route::get('/books', [App\Http\Controllers\BookController::class, 'getAllBooks']);
@@ -32,7 +33,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/return-book', [App\Http\Controllers\BookController::class, 'returnBook']);
     Route::post('/extend-loan', [App\Http\Controllers\BookController::class, 'extendLoan']);
     Route::post('/receive-book', [App\Http\Controllers\BookController::class, 'receiveBook']);
-    // Add more protected routes here
+    Route::put('/books-id/{id}', [App\Http\Controllers\BookController::class, 'updateBook']);
+    Route::delete('/delete-users/{id}', [App\Http\Controllers\UserController::class, 'deleteUser']);
+    Route::delete('/delete-book/{id}', [App\Http\Controllers\BookController::class, 'deleteBook']);
+
+
 });
 
 

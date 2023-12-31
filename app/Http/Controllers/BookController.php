@@ -40,6 +40,36 @@ class BookController extends Controller
         return response()->json(['status_code' => 1000, 'message' => 'Book created successfully', 'book' => $book]);
     }
 
+    public function updateBook(Request $request, $id)
+    {
+        $request->validate([
+            'name' => 'required|string',
+            'publisher' => 'required|string',
+            'isbn' => 'required|string',
+            'category' => 'required|string',
+            'sub_category' => 'required|string',
+            'description' => 'required|string',
+            'pages' => 'required|string',
+            'added_by' => 'required|string',
+        ]);
+
+        $book = Book::findOrFail($id);
+
+        $bookData = $request->except('image');
+
+        if ($request->hasFile('image')) {
+            $image = $request->file('image');
+            $imageName = time() . '.' . $image->getClientOriginalExtension();
+            Storage::disk('public')->put($imageName, file_get_contents($image));
+            $bookData['image'] = $imageName;
+        }
+
+        $book->update($bookData);
+
+        return response()->json(['status_code' => 1000, 'message' => 'Book updated successfully', 'book' => $book]);
+    }
+
+
 
     public function returnBook(Request $request)
     {
@@ -163,7 +193,7 @@ class BookController extends Controller
         $currentDate = now();
         $dueDate = $loan->due_date;
 
-        $extensionDays =  7; // Default to 7 days if not configured
+        $extensionDays =  7;
 
         if ($currentDate->lte($dueDate)) {
             return response()->json(['error' => 'The loan is not eligible for extension.'], 400);
@@ -209,5 +239,29 @@ class BookController extends Controller
         }
 
         return response()->json(['status_code' => 1000, 'message' => 'Success', 'data' => $books]);
+    }
+
+    public function deleteBook($id)
+    {
+        try {
+
+            $book = Book::findOrFail($id);
+
+            if ($book->image) {
+                Storage::disk('public')->delete($book->image);
+            }
+            $book->delete();
+
+            return response()->json([
+                'status_code' => 1000,
+                'message' => 'Book deleted successfully.',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status_code' => 500,
+                'message' => 'Error deleting book.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 }
