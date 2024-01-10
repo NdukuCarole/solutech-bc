@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Book;
 use App\Models\BookLoan;
+use App\Models\User;
 use Illuminate\Support\Facades\Storage;
 
 class BookController extends Controller
@@ -75,7 +76,10 @@ class BookController extends Controller
     {
         $this->validate($request, [
             'loan_id' => 'required|exists:book_loans,id',
+            'book_id' => 'required|exists:books,id',
         ]);
+
+        $book = Book::find($request['book_id']);
 
         $loan = BookLoan::find($request->input('loan_id'));
         if (!$loan) {
@@ -83,9 +87,7 @@ class BookController extends Controller
         }
 
         $loan->update(['status' => 'returned', 'return_date' => now()]);
-
-
-
+        $book->update(['status' => 'Available']);
 
         return response()->json(['status_code' => 1000, 'message' => 'Book returned successfully.'], 200);
     }
@@ -163,14 +165,13 @@ class BookController extends Controller
         $loan->update(['status' => 'declined']);
 
 
-
         $book = Book::find($loan['book_id']);
         if (!$book) {
             return response()->json(['error' => 'Book not found.'], 404);
         }
-        $book->update(['status' => 'declined']);
+        $book->update(['status' => 'Available']);
 
-        return response()->json(['status_code' => 1000, 'message' => 'Loan declined and book issued successfully.'], 200);
+        return response()->json(['status_code' => 1000, 'message' => 'Loan declined successfully.'], 200);
     }
 
     public function extendLoan(Request $request)
@@ -179,10 +180,14 @@ class BookController extends Controller
             'loan_id' => 'required|exists:book_loans,id',
         ]);
 
+
+
         $loan = BookLoan::find($request->input('loan_id'));
         if (!$loan) {
             return response()->json(['error' => 'Loan not found.'], 404);
         }
+
+     
 
 
         if ($loan->status !== 'approved' || $loan->returned_at !== null) {
@@ -201,7 +206,7 @@ class BookController extends Controller
 
         // Extend the due date
         $extendedDueDate = $currentDate->addDays($extensionDays);
-        $loan->update(['due_date' => $extendedDueDate]);
+        $loan->update(['due_date' => $extendedDueDate, 'extended' => 'yes', 'extension_date' => now()]);
 
         return response()->json(['status_code' => 1000, 'message' => 'Loan extended successfully.'], 200);
     }
@@ -210,6 +215,7 @@ class BookController extends Controller
     {
         $this->validate($request, [
             'loan_id' => 'required|exists:book_loans,id',
+            'book_id' => 'required|exists:books,id',
         ]);
 
         $loan = BookLoan::find($request->input('loan_id'));
@@ -221,12 +227,18 @@ class BookController extends Controller
         if ($loan->status !== 'approved' || $loan->returned_at !== null) {
             return response()->json(['error' => 'Invalid loan status for book return.'], 400);
         }
-        $loan->update(['status' => 'returned', 'returned_at' => now()]);
+        $loan->update(['status' => 'received', 'returned_at' => now(), 'penalty_status' => 'penalized', 'penalty_amount' => 1000]);
 
-        $book = Book::find($loan->book_id);
-        $book->increment('quantity');
+        $book = Book::find($request['book_id']);
+        $book->update(['status' => 'Available']);
 
-        return response()->json(['message' => 'Book received back successfully.'], 200);
+        $user = User::find($loan->user_id);
+        if ($user && $loan->penalty_status === 'penalized') {
+            $user->update(['has_penalty' => true]);
+        }
+
+
+        return response()->json(['status_code' => 1000, 'message' => 'Book received back successfully.'], 200);
     }
 
     public function getAllBooks()
